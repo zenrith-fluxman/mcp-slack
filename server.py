@@ -102,6 +102,22 @@ def slack_post(channel: str, message: str, thread_ts: str = "", workspace: str =
 
 
 @server.tool()
+def slack_dm(user: str, message: str, workspace: str = "") -> str:
+    """Send a direct message to a user. User can be a name (e.g. 'Uri') or a user ID.
+    Set workspace to target a specific workspace (e.g. 'family'). Defaults to the main workspace."""
+    try:
+        c = _get_client(workspace)
+        user_id = user if _is_user_id(user) else _resolve_user_id(user, c)
+        dm = c.conversations_open(users=user_id)
+        result = c.chat_postMessage(channel=dm["channel"]["id"], text=message)
+        return json.dumps({"ok": True, "ts": result["ts"], "channel": dm["channel"]["id"]})
+    except SlackApiError as e:
+        return json.dumps({"error": e.response["error"]})
+    except ValueError as e:
+        return json.dumps({"error": str(e)})
+
+
+@server.tool()
 def slack_read(channel: str, limit: int = 20, workspace: str = "") -> str:
     """Read recent messages from a Slack channel. Channel can be a name or a channel ID.
     Set workspace to target a specific workspace (e.g. 'family'). Defaults to the main workspace.
@@ -171,9 +187,36 @@ def slack_read_thread(channel: str, thread_ts: str, workspace: str = "") -> str:
         return json.dumps({"error": str(e)})
 
 
+def _is_slack_id(value: str, prefixes: str) -> bool:
+    """Check if value is a Slack ID (e.g. U052MEYCC21, C066G46UXE1).
+    Slack IDs: a prefix letter + 10 uppercase alphanumeric characters."""
+    return (
+        len(value) == 11
+        and value[0] in prefixes
+        and value[1:].isalnum()
+        and value[1:].isupper()
+    )
+
+
 def _is_channel_id(value: str) -> bool:
-    """Slack channel IDs start with C (public), D (DM), or G (private/group)."""
-    return len(value) > 1 and value[0] in ("C", "D", "G") and value[1:].isupper()
+    return _is_slack_id(value, "CDG")
+
+
+def _is_user_id(value: str) -> bool:
+    return _is_slack_id(value, "U")
+
+
+def _resolve_user_id(name: str, client: WebClient) -> str:
+    """Resolve a display name or real name to a Slack user ID."""
+    result = client.users_list()
+    name_lower = name.lower().strip()
+    for u in result["members"]:
+        real_name = (u.get("real_name") or "").lower()
+        display_name = (u.get("profile", {}).get("display_name") or "").lower()
+        first_name = real_name.split()[0] if real_name else ""
+        if name_lower in (real_name, display_name, first_name, u.get("name", "").lower()):
+            return u["id"]
+    raise ValueError(f"User '{name}' not found")
 
 
 def _resolve_channel_id(channel_name: str, client: WebClient) -> str:
