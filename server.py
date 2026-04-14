@@ -43,11 +43,15 @@ def _wrap_untrusted(content: str) -> str:
 
 
 @server.tool()
-def slack_post(channel: str, message: str) -> str:
-    """Post a message to a Slack channel. Channel can be a name (e.g. 'general') or a channel ID."""
+def slack_post(channel: str, message: str, thread_ts: str = "") -> str:
+    """Post a message to a Slack channel. Channel can be a name (e.g. 'general') or a channel ID.
+    Set thread_ts to reply in a thread (use the 'ts' of the parent message)."""
     try:
         resolved = channel if _is_channel_id(channel) else f"#{channel.lstrip('#')}"
-        result = client.chat_postMessage(channel=resolved, text=message)
+        kwargs = {"channel": resolved, "text": message}
+        if thread_ts:
+            kwargs["thread_ts"] = thread_ts
+        result = client.chat_postMessage(**kwargs)
         return json.dumps({"ok": True, "ts": result["ts"], "channel": result["channel"]})
     except SlackApiError as e:
         return json.dumps({"error": e.response["error"]})
