@@ -74,6 +74,23 @@ def slack_list_channels(member_only: bool = False) -> str:
         return json.dumps({"error": e.response["error"]})
 
 
+@server.tool()
+def slack_read_thread(channel: str, thread_ts: str) -> str:
+    """Read replies in a Slack thread. Use the 'ts' from a message in slack_read as the thread_ts."""
+    try:
+        result = client.conversations_replies(
+            channel=channel if _is_channel_id(channel) else _resolve_channel_id(channel),
+            ts=thread_ts,
+        )
+        messages = [
+            {"user": m.get("user"), "text": m.get("text"), "ts": m.get("ts")}
+            for m in result["messages"]
+        ]
+        return json.dumps(messages)
+    except SlackApiError as e:
+        return json.dumps({"error": e.response["error"]})
+
+
 def _is_channel_id(value: str) -> bool:
     """Slack channel IDs start with C (public), D (DM), or G (private/group)."""
     return len(value) > 1 and value[0] in ("C", "D", "G") and value[1:].isupper()
