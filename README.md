@@ -45,11 +45,20 @@ source .venv/bin/activate
 pip install slack_sdk mcp
 ```
 
-Create a `.env` file with your bot token:
+Create a `.env` file with your token:
 
 ```
-SLACK_BOT_TOKEN=xoxb-your-token-here
+SLACK_TOKEN=xoxb-your-token-here
 ```
+
+For multiple workspaces, add additional tokens with a suffix:
+
+```
+SLACK_TOKEN=xoxb-default-workspace-token
+SLACK_TOKEN_WORK=xoxp-other-workspace-token
+```
+
+Then use `workspace="work"` in any tool call to target that workspace.
 
 ## Claude Code Configuration
 
@@ -71,7 +80,7 @@ If you use 1Password, you can inject the token via `op run` instead of a `.env` 
   "command": "/opt/homebrew/bin/op",
   "args": ["run", "--", "/path/to/mcp-slack/.venv/bin/python", "/path/to/mcp-slack/server.py"],
   "env": {
-    "SLACK_BOT_TOKEN": "op://YourVault/YourItem/password"
+    "SLACK_TOKEN": "op://YourVault/YourItem/password"
   }
 }
 ```
