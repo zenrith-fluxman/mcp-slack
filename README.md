@@ -10,20 +10,30 @@ MCP server for reading and posting Slack messages. Gives Claude Code (or any MCP
 | `slack_read` | Read recent messages from a channel |
 | `slack_list_channels` | List all channels (optionally filter to joined only) |
 
-## Prerequisites
+## Bot Token
 
-1. A Slack workspace
-2. A Slack App with a Bot Token (`xoxb-...`). Create one at [api.slack.com/apps](https://api.slack.com/apps)
-3. Bot Token Scopes (add under OAuth & Permissions, then reinstall the app):
-   - `chat:write`
-   - `channels:read`
-   - `channels:history`
-   - `groups:read`
-   - `groups:history`
-   - `im:read` (optional, for DMs)
-   - `im:write` (optional, for DMs)
-   - `im:history` (optional, for DMs)
-4. Invite the bot to channels you want it to access: `/invite @YourBot`
+This server authenticates with Slack using a **Bot Token** (`xoxb-...`). A bot token is tied to a Slack App and gives it permission to read and post messages on behalf of the bot user.
+
+To get a token, either:
+- **Create your own Slack App** at [api.slack.com/apps](https://api.slack.com/apps), add the required scopes (see below), install it to your workspace, and copy the Bot User OAuth Token from the OAuth & Permissions page.
+- **Get it from your workspace admin** if a Slack App already exists for your workspace.
+
+### Required Bot Token Scopes
+
+Add these under your Slack App's OAuth & Permissions page, then reinstall the app to your workspace:
+
+| Scope | What it does |
+|-------|-------------|
+| `chat:write` | Post messages to channels |
+| `channels:read` | List public channels |
+| `channels:history` | Read messages in public channels |
+| `groups:read` | List private channels |
+| `groups:history` | Read messages in private channels |
+| `im:read` | List DMs (optional) |
+| `im:write` | Open DMs (optional) |
+| `im:history` | Read DMs (optional) |
+
+After installing the app, invite the bot to any channel you want it to access: `/invite @YourBot`
 
 ## Setup
 
