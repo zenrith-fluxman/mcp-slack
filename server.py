@@ -50,10 +50,13 @@ def slack_read(channel: str, limit: int = 20) -> str:
             channel=channel if _is_channel_id(channel) else _resolve_channel_id(channel),
             limit=limit,
         )
-        messages = [
-            {"user": m.get("user"), "text": m.get("text"), "ts": m.get("ts")}
-            for m in result["messages"]
-        ]
+        messages = []
+        for m in result["messages"]:
+            msg = {"user": m.get("user"), "text": m.get("text"), "ts": m.get("ts")}
+            reply_count = m.get("reply_count")
+            if reply_count:
+                msg["reply_count"] = reply_count
+            messages.append(msg)
         return json.dumps(messages)
     except SlackApiError as e:
         return json.dumps({"error": e.response["error"]})
